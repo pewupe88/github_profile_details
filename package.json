@@ -1,0 +1,9 @@
+{
+  "description": "CLI tool for fetching basic, public GitHub info about provided user",
+  "name": "github_profile_details",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pewupe88/github_profile_details"
+  },
+  "version": "0.0.1"
+}
