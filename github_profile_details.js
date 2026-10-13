@@ -1,19 +1,37 @@
-const commandLineArgs = process.argv;
-const { [2]: _username } = commandLineArgs;
+const GITHUB_API_DOMAIN = "https://api.github.com";
+const gitHubUsername = process.argv[2];
 
-if (!_username) {
-    throw new Error("You did not provided any username to check");
-    
+if (!gitHubUsername) {
+    console.error("error: please provide a GitHub username");
+    process.exit(1);
 }
 
 async function fetchGitHubUserDetails() {
-    const encodedUserName = encodeURIComponent(_username);
-    const response = await fetch(`https://api.github.com/users/${encodedUserName}`);
+    const url = new URL(GITHUB_API_DOMAIN);
+    const encodedUserName = encodeURIComponent(gitHubUsername);
 
-    if (response.status === 200) {
+    url.pathname = `users/${encodedUserName}`;
+
+    try {
+        const response = await fetch(url.toString(), {
+            headers: {
+                "User-Agent": "github_profile_details"
+            }
+        });
+        const { ok, status, statusText } = response;
+
+        if (status === 404) {
+            console.error(`error: GitHub user not found: '${gitHubUsername}'`);
+            process.exit(1);
+        }
+
+        if (!ok) {
+            console.error(`error: GitHub API responded with status ${status} (${statusText})`);
+            process.exit(1);
+        }
+
         const json = await response.json();
         const {
-            email,
             followers,
             html_url: profileUrl,
             name,
@@ -21,7 +39,10 @@ async function fetchGitHubUserDetails() {
             public_repos: numOfRepos
         } = json;
 
-        console.log(`Name: ${name}\nUsername: ${username}\nProfile: ${profileUrl}\nPublic repos: ${numOfRepos}\nFollowers: ${followers}`);
+        console.log(`Name: ${name ?? "N/A"}\nUsername: ${username}\nProfile: ${profileUrl}\nPublic repos: ${numOfRepos}\nFollowers: ${followers}`);
+    } catch (error) {
+        console.error('error:', error);
+        process.exit(1);
     }
 }
 
